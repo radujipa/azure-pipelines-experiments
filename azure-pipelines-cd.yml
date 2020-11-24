@@ -1,0 +1,31 @@
+# azure-pipelines-cd.yml
+#
+# Copyright (c) 2020 Radu Traian Jipa
+# License: https://opensource.org/licenses/MIT
+#
+# Continuous deployment pipeline for the project.
+
+
+trigger: none
+pr: none
+
+resources:
+  pipelines:
+  - pipeline: ci
+    source: 'Azure Pipelines Experiments CI'
+    branch: main
+    trigger: true
+
+steps:
+- script: |
+    echo pipelineID: $(resources.pipeline.ci.pipelineID)
+    echo runName: $(resources.pipeline.ci.runName)
+    echo runID: $(resources.pipeline.ci.runID)
+    echo runURI: $(resources.pipeline.ci.runURI)
+    echo sourceBranch: $(resources.pipeline.ci.sourceBranch)
+    echo sourceCommit: $(resources.pipeline.ci.sourceCommit)
+    echo sourceProvider: $(resources.pipeline.ci.sourceProvider)
+    echo requestedFor: $(resources.pipeline.ci.requestedFor)
+    echo requestedForID: $(resources.pipeline.ci.requestedForID)
+    echo targetBranch: $(System.PullRequest.TargetBranch)
+    echo sourceBranch: $(Build.SourceBranch)

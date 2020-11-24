@@ -1,0 +1,21 @@
+# azure-pipelines-ci.yml
+#
+# Copyright (c) 2020 Radu Traian Jipa
+# License: https://opensource.org/licenses/MIT
+#
+# Continuous integration pipeline for the project.
+
+
+trigger:
+  branches:
+    include:
+    - main
+
+pr:
+  branches:
+    include:
+    - '*'
+
+steps:
+- script: |
+    echo "Hello, World!"
