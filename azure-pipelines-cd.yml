@@ -16,16 +16,75 @@ resources:
     branch: main
     trigger: true
 
-steps:
-- script: |
-    echo pipelineID: $(resources.pipeline.ci.pipelineID)
-    echo runName: $(resources.pipeline.ci.runName)
-    echo runID: $(resources.pipeline.ci.runID)
-    echo runURI: $(resources.pipeline.ci.runURI)
-    echo sourceBranch: $(resources.pipeline.ci.sourceBranch)
-    echo sourceCommit: $(resources.pipeline.ci.sourceCommit)
-    echo sourceProvider: $(resources.pipeline.ci.sourceProvider)
-    echo requestedFor: $(resources.pipeline.ci.requestedFor)
-    echo requestedForID: $(resources.pipeline.ci.requestedForID)
-    echo sourceBranch: $(Build.SourceBranch)
-    echo targetBranch: $(System.PullRequest.TargetBranch)
+stages:
+- stage: First
+  jobs:
+  - job: FirstPointOne
+    steps:
+    - template: build/import-variables.yml
+      parameters:
+        pipelineID: $(resources.pipeline.ci.pipelineID)
+        runID: $(resources.pipeline.ci.runID)
+    - bash: |
+        echo pipelineID: $(resources.pipeline.ci.pipelineID)
+        echo runName: $(resources.pipeline.ci.runName)
+        echo runID: $(resources.pipeline.ci.runID)
+        echo runURI: $(resources.pipeline.ci.runURI)
+        echo sourceBranch: $(resources.pipeline.ci.sourceBranch)
+        echo sourceCommit: $(resources.pipeline.ci.sourceCommit)
+        echo sourceProvider: $(resources.pipeline.ci.sourceProvider)
+        echo requestedFor: $(resources.pipeline.ci.requestedFor)
+        echo requestedForID: $(resources.pipeline.ci.requestedForID)
+        echo "$(sourceBranch)"
+        echo "$(targetBranch)"
+
+- stage: Second
+  dependsOn: First
+  jobs:
+  - deployment: Second
+    environment: 'StagingPreview'
+    condition: |
+      and(
+        ne(stageDependencies.First.FirstPointOne.outputs['variables.sourceBranch'], ''),
+        ne(stageDependencies.First.FirstPointOne.outputs['variables.targetBranch'], ''))
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - bash: |
+              echo "Hello, World!"
+
+- stage: Third
+  dependsOn:
+  - First
+  - Second
+  condition: |
+    and(
+      ne(dependencies.First.outputs['FirstPointOne.variables.sourceBranch'], ''),
+      ne(dependencies.First.outputs['FirstPointOne.variables.targetBranch'], ''))
+  jobs:
+  - deployment: Third
+    environment: 'StagingPreview'
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - bash: |
+              echo "Hello, World!"
+
+- stage: Forth
+  dependsOn:
+  - First
+  - Third
+  condition: |
+    and(
+      ne(dependencies.First.outputs['FirstPointOne.variables.sourceBranch'], ''),
+      ne(dependencies.First.outputs['FirstPointOne.variables.targetBranch'], ''))
+  variables:
+    sourceBranch: $[stageDependencies.First.FirstPointOne.outputs['variables.sourceBranch']]
+    targetBranch: $[stageDependencies.First.FirstPointOne.outputs['variables.targetBranch']]
+  jobs:
+  - template: build/deployment.yml
+    parameters:
+      sourceBranch: $(sourceBranch)
+      targetBranch: $(targetBranch)
