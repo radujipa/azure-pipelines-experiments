@@ -29,3 +29,4 @@ steps:
     echo requestedForID: $(resources.pipeline.ci.requestedForID)
     echo sourceBranch: $(Build.SourceBranch)
     echo targetBranch: $(System.PullRequest.TargetBranch)
+    echo "That is all, folks!"
