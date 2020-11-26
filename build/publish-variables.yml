@@ -1,0 +1,17 @@
+# publish-variables.yml
+#
+# Copyright (c) 2020 Radu Traian Jipa
+# License: https://opensource.org/licenses/MIT
+#
+# Once a number of variables have been exported using export-variable.yml this task will
+# publish everything as a build artifact. Use import-variables.yml to download and load
+# everything in a different pipeline.
+
+
+steps:
+- task: PublishBuildArtifacts@1
+  displayName: 'Publish Exported Variables'
+  inputs:
+    PathtoPublish: '$(Build.ArtifactStagingDirectory)/variables'
+    ArtifactName: 'variables'
+    publishLocation: 'Container'

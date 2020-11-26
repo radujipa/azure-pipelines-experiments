@@ -1,0 +1,28 @@
+# deployment.yml
+#
+# Copyright (c) 2020 Radu Traian Jipa
+# License: https://opensource.org/licenses/MIT
+
+
+parameters:
+  # Optional parameters.
+- name: sourceBranch
+  type: string
+  default: ''
+
+- name: targetBranch
+  type: string
+  default: ''
+
+
+jobs:
+- deployment: DeploymentTemplate
+  environment: 'StagingPreview'
+  strategy:
+    runOnce:
+      deploy:
+        steps:
+        - bash: |
+            echo "Hello, World!"
+            echo "${{parameters.sourceBranch}}"
+            echo "${{parameters.targetBranch}}"

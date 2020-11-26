@@ -1,0 +1,28 @@
+# export-variable.yml
+#
+# Copyright (c) 2020 Radu Traian Jipa
+# License: https://opensource.org/licenses/MIT
+#
+# This template is intended for use in conjunction with publish-variables.yml and
+# import-variables.yml. It serialises a variable to a file that can later be
+# published for use in further pipelines.
+#
+# NOTE: Avoid exporting secrets via this template or they will be compromised.
+
+
+parameters:
+  # Required parameters for this template.
+- name: name
+  type: string
+
+- name: value
+  type: string
+
+
+steps:
+- bash: |
+    path=$(Build.ArtifactStagingDirectory)/variables
+    mkdir -p $path
+    echo "Exporting '${{parameters.name}}' with value '${{parameters.value}}'"
+    echo "${{parameters.value}}" > $path/${{parameters.name}}
+  displayName: 'Export Variable'
