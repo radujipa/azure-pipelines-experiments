@@ -18,6 +18,8 @@ pr:
 
 steps:
 - script: |
-    echo "Hello, World!"
-    echo sourceBranch: $(Build.SourceBranch)
-    echo targetBranch: $(System.PullRequest.TargetBranch)
+    mkdir -p $(Pipeline.Workspace)/pipelineTag/artifactName
+    mkdir -p $(Pipeline.Workspace)/anotherPipelineTag/artifactName
+    echo "Hello, World!" > $(Pipeline.Workspace)/pipelineTag/artifactName/file.txt
+    echo "Look, Mom! No hands!" > $(Pipeline.Workspace)/anotherPipelineTag/artifactName/anotherFile.txt
+    ls -l $(Pipeline.Workspace)/*/artifactName
