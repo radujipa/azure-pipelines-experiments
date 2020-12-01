@@ -17,9 +17,9 @@ resources:
     trigger: true
 
 stages:
-- stage: First
+- stage: ReleaseInit
   jobs:
-  - job: FirstPointOne
+  - job: Init
     steps:
     - template: build/import-variables.yml
       parameters:
@@ -38,32 +38,14 @@ stages:
         echo "$(sourceBranch)"
         echo "$(targetBranch)"
 
-- stage: Second
-  dependsOn: First
-  jobs:
-  - deployment: Second
-    environment: 'StagingPreview'
-    condition: |
-      and(
-        ne(stageDependencies.First.FirstPointOne.outputs['variables.sourceBranch'], ''),
-        ne(stageDependencies.First.FirstPointOne.outputs['variables.targetBranch'], ''))
-    strategy:
-      runOnce:
-        deploy:
-          steps:
-          - bash: |
-              echo "Hello, World!"
-
-- stage: Third
-  dependsOn:
-  - First
-  - Second
+- stage: StagingPreview
+  dependsOn: ReleaseInit
   condition: |
-    and(
-      ne(dependencies.First.outputs['FirstPointOne.variables.sourceBranch'], ''),
-      ne(dependencies.First.outputs['FirstPointOne.variables.targetBranch'], ''))
+    and(succeeded(),
+        or(eq(dependencies.ReleaseInit.outputs['Init.var.targetBranch'], 'main'),
+           eq(variables['Build.Reason'], 'Manual')))
   jobs:
-  - deployment: Third
+  - deployment: StagingPreview
     environment: 'StagingPreview'
     strategy:
       runOnce:
@@ -72,19 +54,20 @@ stages:
           - bash: |
               echo "Hello, World!"
 
-- stage: Forth
+- stage: Staging
   dependsOn:
-  - First
-  - Third
+  - ReleaseInit
+  - StagingPreview
   condition: |
-    and(
-      ne(dependencies.First.outputs['FirstPointOne.variables.sourceBranch'], ''),
-      ne(dependencies.First.outputs['FirstPointOne.variables.targetBranch'], ''))
-  variables:
-    sourceBranch: $[stageDependencies.First.FirstPointOne.outputs['variables.sourceBranch']]
-    targetBranch: $[stageDependencies.First.FirstPointOne.outputs['variables.targetBranch']]
+    and(succeeded(),
+        or(eq(variables['resources.pipeline.ci.sourceBranch'], 'refs/heads/main'),
+           eq(variables['Build.Reason'], 'Manual')))
   jobs:
-  - template: build/deployment.yml
-    parameters:
-      sourceBranch: $(sourceBranch)
-      targetBranch: $(targetBranch)
+  - deployment: Staging
+    environment: 'Staging'
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - bash: |
+              echo "Hello, World!"
