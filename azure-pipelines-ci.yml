@@ -30,6 +30,11 @@ stages:
         echo "Hello, World!"
         echo sourceBranch: $(Build.SourceBranch)
         echo targetBranch: $(System.PullRequest.TargetBranch)
+
+- stage: ExportVariables
+  jobs:
+  - job: ExportVariables
+    steps:
     - template: build/export-variable.yml
       parameters:
         name: 'sourceBranch'
@@ -39,67 +44,3 @@ stages:
         name: 'targetBranch'
         value: '$(System.PullRequest.TargetBranch)'
     - template: build/publish-variables.yml
-    - bash: |
-        echo "$(sourceBranch)"
-        echo "$(targetBranch)"
-
-- stage: Second
-  jobs:
-  - job: SecondPointOne
-    steps:
-    - bash: |
-        echo "Hello, World!"
-        echo sourceBranch: $(Build.SourceBranch)
-        echo targetBranch: $(System.PullRequest.TargetBranch)
-        echo "$(sourceBranch)"
-        echo "$(targetBranch)"
-    - template: build/import-variables.yml
-    - bash: |
-        echo "$(sourceBranch)"
-        echo "$(targetBranch)"
-
-  - job: SecondPointTwo
-    dependsOn: SecondPointOne
-    variables:
-      sourceBranch: $[dependencies.SecondPointOne.outputs['variables.sourceBranch']]
-      targetBranch: $[dependencies.SecondPointOne.outputs['variables.targetBranch']]
-    steps:
-    - bash: |
-        echo "$(sourceBranch)"
-        echo "$(targetBranch)"
-
-  - job: SecondPointThree
-    dependsOn: SecondPointOne
-    condition: |
-      and(
-        ne(dependencies.SecondPointOne.outputs['variables.sourceBranch'], ''),
-        ne(dependencies.SecondPointOne.outputs['variables.targetBranch'], ''))
-    steps:
-    - bash: |
-        echo "Hello, World!"
-
-- stage: Third
-  dependsOn: Second
-  jobs:
-  - job: Third
-    condition: |
-      and(
-        ne(stageDependencies.Second.SecondPointOne.outputs['variables.sourceBranch'], ''),
-        ne(stageDependencies.Second.SecondPointOne.outputs['variables.targetBranch'], ''))
-    steps:
-    - bash: |
-        echo "Hello, World!"
-
-- stage: Forth
-  dependsOn:
-  - Second
-  - Third
-  condition: |
-    and(
-      ne(dependencies.Second.outputs['SecondPointOne.variables.sourceBranch'], ''),
-      ne(dependencies.Second.outputs['SecondPointOne.variables.targetBranch'], ''))
-  jobs:
-  - job: Forth
-    steps:
-    - bash: |
-        echo "Hello, World!"
